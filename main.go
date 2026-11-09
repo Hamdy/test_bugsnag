@@ -53,14 +53,17 @@ func status(w http.ResponseWriter, _ *http.Request) {
 }
 
 // latencyReport reports the average response time of the recent requests. There are none yet,
-// which is the bug this repository exists for.
+// so the average is 0.
 func latencyReport(w http.ResponseWriter, _ *http.Request) {
 	var samples []int // milliseconds; nothing has been recorded
 	writeJSON(w, http.StatusOK, map[string]int{"average_ms": averageLatency(samples)})
 }
 
-// averageLatency is the mean of samples, in milliseconds.
+// averageLatency is the mean of samples, in milliseconds, or 0 when there are none.
 func averageLatency(samples []int) int {
+	if len(samples) == 0 {
+		return 0
+	}
 	total := 0
 	for _, s := range samples {
 		total += s
