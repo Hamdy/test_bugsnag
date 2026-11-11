@@ -1,6 +1,7 @@
-// Command test_bugsnag is a tiny API with a real bug, for trying pipe.ai's fix-the-error
-// workflows end to end: GET / answers {"status":"ok"}, and GET /test crashes, which reports the
-// crash to BugSnag (with its stack trace and the request) and answers 500.
+// Command test_bugsnag is a tiny API for trying pipe.ai's fix-the-error workflows end to end:
+// GET / answers {"status":"ok"}, and GET /test answers the average latency of the recent
+// requests. A panic in a handler is reported to BugSnag (with its stack trace and the request)
+// and answered with a 500.
 package main
 
 import (
@@ -53,14 +54,17 @@ func status(w http.ResponseWriter, _ *http.Request) {
 }
 
 // latencyReport reports the average response time of the recent requests. There are none yet,
-// which is the bug this repository exists for.
+// so the average is 0.
 func latencyReport(w http.ResponseWriter, _ *http.Request) {
 	var samples []int // milliseconds; nothing has been recorded
 	writeJSON(w, http.StatusOK, map[string]int{"average_ms": averageLatency(samples)})
 }
 
-// averageLatency is the mean of samples, in milliseconds.
+// averageLatency is the mean of samples, in milliseconds, or 0 when there are no samples.
 func averageLatency(samples []int) int {
+	if len(samples) == 0 {
+		return 0
+	}
 	total := 0
 	for _, s := range samples {
 		total += s
